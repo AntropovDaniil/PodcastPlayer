@@ -19,6 +19,7 @@ import com.example.podcastplayer.adapter.PodcastListAdapter
 import com.example.podcastplayer.databinding.ActivityPodcastBinding
 import com.example.podcastplayer.repository.ItunesRepo
 import com.example.podcastplayer.repository.PodcastRepository
+import com.example.podcastplayer.service.FeedService
 import com.example.podcastplayer.service.ItunesService
 import com.example.podcastplayer.viewmodel.PodcastViewModel
 import com.example.podcastplayer.viewmodel.SearchViewModel
@@ -79,7 +80,8 @@ class PodcastActivity : AppCompatActivity(), PodcastListAdapter.PodcastListAdapt
     private fun setupViewModels(){
         val service = ItunesService.instance
         searchViewModel.iTunesRepo = ItunesRepo(service)
-        podcastViewModel.podcastRepo = PodcastRepository()
+        val rssService = FeedService.instance
+        podcastViewModel.podcastRepo = PodcastRepository(rssService)
     }
 
     private fun performSearch(term: String){

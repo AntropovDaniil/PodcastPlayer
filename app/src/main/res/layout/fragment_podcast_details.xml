@@ -11,10 +11,10 @@
         android:layout_height="wrap_content"
         android:background="#eeeeee"
         android:maxHeight="300dp"
+        android:layout_marginTop="?attr/actionBarSize"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
-
         <ImageView
             android:id="@+id/feedImageView"
             android:layout_width="60dp"
@@ -24,7 +24,6 @@
             android:src="@android:drawable/ic_menu_report_image"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"/>
-
         <TextView
             android:id="@+id/feedTitleTextView"
             android:layout_width="0dp"
@@ -35,11 +34,10 @@
             android:text=""
             android:textSize="14sp"
             android:textStyle="bold"
-            app:layout_constraintBottom_toBottomOf="@id/feedImageView"
+            app:layout_constraintBottom_toBottomOf="@+id/feedImageView"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@id/feedImageView"
-            app:layout_constraintTop_toTopOf="@id/feedImageView"/>
-
+            app:layout_constraintStart_toEndOf="@+id/feedImageView"
+            app:layout_constraintTop_toTopOf="@+id/feedImageView"/>
         <TextView
             android:id="@+id/feedDescTextView"
             android:layout_width="0dp"
@@ -53,7 +51,7 @@
             android:text=""
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/feedImageView"/>
+            app:layout_constraintTop_toBottomOf="@+id/feedImageView"/>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
