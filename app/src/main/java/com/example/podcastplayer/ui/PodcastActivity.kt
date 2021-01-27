@@ -12,11 +12,13 @@ import android.view.MenuItem
 import android.view.View
 import androidx.activity.viewModels
 import androidx.appcompat.widget.SearchView
+import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.podcastplayer.R
 import com.example.podcastplayer.adapter.PodcastListAdapter
 import com.example.podcastplayer.databinding.ActivityPodcastBinding
+import com.example.podcastplayer.db.PodPlayDatabase
 import com.example.podcastplayer.repository.ItunesRepo
 import com.example.podcastplayer.repository.PodcastRepository
 import com.example.podcastplayer.service.FeedService
@@ -24,9 +26,10 @@ import com.example.podcastplayer.service.ItunesService
 import com.example.podcastplayer.viewmodel.PodcastViewModel
 import com.example.podcastplayer.viewmodel.SearchViewModel
 
-class PodcastActivity : AppCompatActivity(), PodcastListAdapter.PodcastListAdapterListener {
+class PodcastActivity : AppCompatActivity(),
+    PodcastListAdapter.PodcastListAdapterListener,
+    PodcastDetailsFragment.OnPodcastDetailListener{
 
-    private val TAG = "TAG_for_test"
     private lateinit var binding: ActivityPodcastBinding
     private val searchViewModel by viewModels<SearchViewModel>()
     private lateinit var podcastListAdapter: PodcastListAdapter
@@ -45,6 +48,7 @@ class PodcastActivity : AppCompatActivity(), PodcastListAdapter.PodcastListAdapt
         setupToolbar()
         setupViewModels()
         updateControls()
+        setupPodcastListView()
         handleIntent(intent)
         addBackStackListener()
     }
@@ -54,6 +58,17 @@ class PodcastActivity : AppCompatActivity(), PodcastListAdapter.PodcastListAdapt
         val inflater = menuInflater
         inflater.inflate(R.menu.menu_search, menu)
         searchMenuItem = menu.findItem(R.id.search_item)
+        searchMenuItem.setOnActionExpandListener(object :
+        MenuItem.OnActionExpandListener{
+            override fun onMenuItemActionExpand(item: MenuItem?): Boolean {
+                return true
+            }
+
+            override fun onMenuItemActionCollapse(item: MenuItem?): Boolean {
+                showSubscribedPodcasts()
+                return true
+            }
+        })
         val searchView = searchMenuItem.actionView as SearchView
         val searchManager = getSystemService(Context.SEARCH_SERVICE) as SearchManager
         searchView.setSearchableInfo(searchManager.getSearchableInfo(componentName))
@@ -73,6 +88,16 @@ class PodcastActivity : AppCompatActivity(), PodcastListAdapter.PodcastListAdapt
         handleIntent(intent)
     }
 
+    override fun onSubscribe() {
+        podcastViewModel.saveActivePodcast()
+        supportFragmentManager.popBackStack()
+    }
+
+    override fun onUnsubscribe() {
+        podcastViewModel.deleteActivePodcast()
+        supportFragmentManager.popBackStack()
+    }
+
     private fun setupToolbar(){
         setSupportActionBar(binding.toolbar)
     }
@@ -81,7 +106,9 @@ class PodcastActivity : AppCompatActivity(), PodcastListAdapter.PodcastListAdapt
         val service = ItunesService.instance
         searchViewModel.iTunesRepo = ItunesRepo(service)
         val rssService = FeedService.instance
-        podcastViewModel.podcastRepo = PodcastRepository(rssService)
+        val db = PodPlayDatabase.getInstance(this)
+        val podcastDao = db.podcastDao()
+        podcastViewModel.podcastRepo = PodcastRepository(rssService, podcastDao)
     }
 
     private fun performSearch(term: String){
@@ -172,5 +199,21 @@ class PodcastActivity : AppCompatActivity(), PodcastListAdapter.PodcastListAdapt
                 binding.podcastRecyclerView.visibility = View.VISIBLE
             }
         }
+    }
+
+    private fun showSubscribedPodcasts(){
+        val podcasts = podcastViewModel.getPodcasts()?.value
+        if (podcasts != null){
+            binding.toolbar.title = getString(R.string.subscribed_podcasts)
+            podcastListAdapter.setSearchData(podcasts)
+        }
+    }
+
+    private fun setupPodcastListView() {
+        podcastViewModel.getPodcasts()?.observe(this, Observer {
+            if (it != null){
+                showSubscribedPodcasts()
+            }
+        })
     }
 }

@@ -18,10 +18,10 @@ object DateUtils {
         return outputFormat.format(date)
     }
 
-    fun xmlDateToDate(dateString: String?): Date {
-        val date = dateString ?: return Date()
-        val inFormat = SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss z", Locale.getDefault())
-        //return inFormat.parse(date) ?: Date()
+    fun xmlDateToDate(date: String?): Date {
+        val date = date ?: return Date()
+        val inFormat = SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss z")
+        //return inFormat.parse(date)
         return Date()
     }
 

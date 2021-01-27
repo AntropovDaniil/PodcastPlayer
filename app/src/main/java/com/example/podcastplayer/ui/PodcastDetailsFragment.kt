@@ -1,5 +1,6 @@
 package com.example.podcastplayer.ui
 
+import android.content.Context
 import android.os.Bundle
 import android.text.method.ScrollingMovementMethod
 import android.view.*
@@ -12,16 +13,30 @@ import com.example.podcastplayer.R
 import com.example.podcastplayer.adapter.EpisodeListAdapter
 import com.example.podcastplayer.databinding.FragmentPodcastDetailsBinding
 import com.example.podcastplayer.viewmodel.PodcastViewModel
+import java.lang.RuntimeException
 
 class PodcastDetailsFragment: Fragment() {
 
     private val podcastViewModel: PodcastViewModel by activityViewModels()
     private lateinit var binding: FragmentPodcastDetailsBinding
     private lateinit var episodeListAdapter: EpisodeListAdapter
+    private var listener: OnPodcastDetailListener? = null
+    private var menuItem: MenuItem? = null
 
     companion object{
         fun newInstance(): PodcastDetailsFragment {
             return PodcastDetailsFragment()
+        }
+    }
+
+    override fun onAttach(context: Context) {
+        super.onAttach(context)
+        if (context is OnPodcastDetailListener){
+            listener = context
+        }
+        else{
+            throw RuntimeException(context.toString() +
+                    " must implement OnPodcastDetailsListener")
         }
     }
 
@@ -37,7 +52,7 @@ class PodcastDetailsFragment: Fragment() {
     ): View? {
         binding = FragmentPodcastDetailsBinding.inflate(inflater, container, false)
         val view = binding.root
-        return view //inflater.inflate(R.layout.fragment_podcast_details, container, false)
+        return view
     }
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
@@ -49,6 +64,26 @@ class PodcastDetailsFragment: Fragment() {
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         super.onCreateOptionsMenu(menu, inflater)
         inflater.inflate(R.menu.menu_details, menu)
+        menuItem = menu.findItem(R.id.menu_feed_action)
+        updateMenuItem()
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        when(item.itemId){
+            R.id.menu_feed_action -> {
+                podcastViewModel.activePodcastViewData?.feedUrl?.let {
+                    if (podcastViewModel.activePodcastViewData?.subscribed == true){
+                        listener?.onUnsubscribe()
+                    }
+                    else{
+                        listener?.onSubscribe()
+                    }
+                }
+                return true
+            }
+            else ->
+                return super.onOptionsItemSelected(item)
+        }
     }
 
     private fun updateControls(){
@@ -73,5 +108,19 @@ class PodcastDetailsFragment: Fragment() {
         binding.episodeRecyclerView.addItemDecoration(dividerItemDecoration)
         episodeListAdapter = EpisodeListAdapter(podcastViewModel.activePodcastViewData?.episodes)
         binding.episodeRecyclerView.adapter = episodeListAdapter
+    }
+
+    private fun updateMenuItem(){
+        val viewData = podcastViewModel.activePodcastViewData ?: return
+
+        menuItem?.title = if (viewData.subscribed){
+            getString(R.string.unsubscribe)
+        }
+        else getString(R.string.subscribe)
+    }
+
+    interface OnPodcastDetailListener{
+        fun onSubscribe()
+        fun onUnsubscribe()
     }
 }
