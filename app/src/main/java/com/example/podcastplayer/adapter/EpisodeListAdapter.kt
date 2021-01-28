@@ -11,20 +11,31 @@ import com.example.podcastplayer.util.HtmlUtils
 import com.example.podcastplayer.viewmodel.PodcastViewModel
 
 class EpisodeListAdapter(
-    private var episodeViewList: List<PodcastViewModel.EpisodeViewData>?):
+    private var episodeViewList: List<PodcastViewModel.EpisodeViewData>?,
+    private val episodeListAdapterListener: EpisodeListAdapterListener):
         RecyclerView.Adapter<EpisodeListAdapter.ViewHolder>() {
 
-            class ViewHolder(v: View): RecyclerView.ViewHolder(v){
+            class ViewHolder(v: View,
+                    val episodeListAdapterListener: EpisodeListAdapterListener): RecyclerView.ViewHolder(v){
                 var episodeViewData: PodcastViewModel.EpisodeViewData? = null
                 val titleTextView: TextView = v.findViewById(R.id.titleView)
                 val descTextView: TextView = v.findViewById(R.id.descView)
                 val durationTextView: TextView = v.findViewById(R.id.durationView)
                 val releaseDateTextView: TextView = v.findViewById(R.id.releaseDateView)
+
+                init {
+                    v.setOnClickListener {
+                        episodeViewData?.let {
+                            episodeListAdapterListener.onSelectedEpisode(it)
+                        }
+                    }
+                }
             }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         return ViewHolder(LayoutInflater.from(parent.context)
-            .inflate(R.layout.episode_item, parent, false))
+            .inflate(R.layout.episode_item, parent, false),
+        episodeListAdapterListener)
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
@@ -42,5 +53,9 @@ class EpisodeListAdapter(
 
     override fun getItemCount(): Int {
         return episodeViewList?.size ?: 0
+    }
+
+    interface EpisodeListAdapterListener{
+        fun onSelectedEpisode(episodeViewData: PodcastViewModel.EpisodeViewData)
     }
 }
