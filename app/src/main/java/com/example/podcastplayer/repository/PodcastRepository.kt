@@ -72,6 +72,36 @@ class PodcastRepository(private var feedService: FeedService,
             episodes = rssItemsToEpisodes(items))
     }
 
+    private fun getNewEpisodes(localPodcast: Podcast, callBack: (List<Episode>) -> Unit){
+        feedService.getFeed(localPodcast.feedUrl){ response ->
+            if (response != null){
+                val remotePodcast = rssResponseToPodcast(
+                        localPodcast.feedUrl,
+                        localPodcast.imageUrl,
+                        response)
+                remotePodcast?.let {
+                    val localEpisodes = podcastDao.loadEpisodes(localPodcast.id!!)
+                    val newEpisodes = remotePodcast.episodes.filter { episode ->
+                        localEpisodes.find {
+                            episode.guid == it.guid
+                        } == null
+                    }
+                    callBack(newEpisodes)
+                }
+            } else
+                callBack(listOf())
+        }
+    }
+
+    private fun saveNewEpisodes(podcastId: Long, episodes: List<Episode>){
+        GlobalScope.launch {
+            for (episode in episodes){
+                episode.podcastId = podcastId
+                podcastDao.insertEpisode(episode)
+            }
+        }
+    }
+
     fun save(podcast: Podcast){
         GlobalScope.launch {
             val podcastId = podcastDao.insertPodcast(podcast)
@@ -91,4 +121,32 @@ class PodcastRepository(private var feedService: FeedService,
             podcastDao.deletePodcast(podcast)
         }
     }
+
+    fun updatePodcastEpisodes(callback: (List<PodcastUpdateInfo>) -> Unit){
+        val updatedPodcasts: MutableList<PodcastUpdateInfo> = mutableListOf()
+
+        val podcasts = podcastDao.loadPodcastsStatic()
+        var processCount = podcasts.count()
+
+        for (podcast in podcasts){
+            getNewEpisodes(podcast){newEpisode ->
+                if (newEpisode.count() > 0){
+                    saveNewEpisodes(podcast.id!!, newEpisode)
+
+                    updatedPodcasts.add(PodcastUpdateInfo(
+                            podcast.feedUrl,
+                            podcast.feedTitle,
+                            newEpisode.count()
+                    ))
+                }
+
+                processCount--
+                if (processCount == 0){
+                    callback(updatedPodcasts)
+                }
+            }
+        }
+    }
+
+    class PodcastUpdateInfo(val feedUrl: String, val name: String, val newCount: Int)
 }
