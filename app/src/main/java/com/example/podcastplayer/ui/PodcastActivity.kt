@@ -42,6 +42,7 @@ class PodcastActivity : AppCompatActivity(),
     companion object{
         private const val TAG_DETAILS_FRAGMENT = "DetailsFragment"
         private const val TAG_EPISODE_UPDATE_JOB = "com.example.podcastplayer.episodes"
+        private const val TAG_PLAYER_FRAGMENT = "PlayerFragment"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -101,6 +102,11 @@ class PodcastActivity : AppCompatActivity(),
     override fun onUnsubscribe() {
         podcastViewModel.deleteActivePodcast()
         supportFragmentManager.popBackStack()
+    }
+
+    override fun onShowEpisodePlayer(episodeViewData: PodcastViewModel.EpisodeViewData) {
+        podcastViewModel.activeEpisodeViewData = episodeViewData
+        showPlayerFragment()
     }
 
     private fun setupToolbar(){
@@ -246,5 +252,26 @@ class PodcastActivity : AppCompatActivity(),
         WorkManager.getInstance(this).enqueueUniquePeriodicWork(
                 TAG_EPISODE_UPDATE_JOB,
                 ExistingPeriodicWorkPolicy.REPLACE, request)
+    }
+
+    private fun createEpisodePlayerFragment(): EpisodePlayerFragment{
+        var episodePLayerFragment = supportFragmentManager.findFragmentByTag(TAG_PLAYER_FRAGMENT) as EpisodePlayerFragment?
+
+        if (episodePLayerFragment == null){
+            episodePLayerFragment = EpisodePlayerFragment.newInstance()
+        }
+        return episodePLayerFragment
+    }
+
+    private fun showPlayerFragment(){
+        val episodePLayerFragment = createEpisodePlayerFragment()
+        supportFragmentManager.beginTransaction().replace(
+                R.id.podcastDetailsContainer,
+                episodePLayerFragment,
+                TAG_PLAYER_FRAGMENT
+        ).addToBackStack("PlayerFragment").commit()
+
+        binding.podcastRecyclerView.visibility = View.INVISIBLE
+        searchMenuItem.isVisible = false
     }
 }

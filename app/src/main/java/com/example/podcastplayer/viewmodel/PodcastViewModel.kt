@@ -16,6 +16,7 @@ class PodcastViewModel(application: Application): AndroidViewModel(application) 
     var activePodcastViewData: PodcastViewData? = null
     private var activePodcast: Podcast? = null
     var livePodcastData: LiveData<List<SearchViewModel.PodcastSummaryViewData>>? = null
+    var activeEpisodeViewData: EpisodeViewData? = null
 
     data class PodcastViewData(
         var subscribed: Boolean = false,
@@ -32,18 +33,21 @@ class PodcastViewModel(application: Application): AndroidViewModel(application) 
         var description: String? = "",
         var mediaUrl: String? = "",
         var releaseDate: Date? = null,
-        var duration: String? = ""
+        var duration: String? = "",
+        var isVideo: Boolean = false
     )
 
     private fun episodesToEpisodesView(episodes: List<Episode>): List<EpisodeViewData>{
         return episodes.map {
+            val isVideo = it.mimeType.startsWith("video")
             EpisodeViewData(
                 it.guid,
                 it.title,
                 it.description,
                 it.mediaUrl,
                 it.releaseDate,
-                it.duration)
+                it.duration,
+                isVideo)
         }
     }
 
