@@ -258,7 +258,7 @@ class EpisodePlayerFragment: Fragment() {
 
         if (isPLaying){
             if (isVideo){
-                setupViedoUI()
+                setupVideoUI()
             }
             animateScrubber(progress, speed)
         }
@@ -295,7 +295,7 @@ class EpisodePlayerFragment: Fragment() {
     private fun animateScrubber(progress: Int, speed: Float){
         val timeRemaining = ((episodeDuration - progress) / speed).toInt()
 
-        if (timeRemaining > 0){
+        if (timeRemaining < 0){
             return
         }
         progressAnimator = ValueAnimator.ofInt(
@@ -408,7 +408,7 @@ class EpisodePlayerFragment: Fragment() {
         })
     }
 
-    private fun setupViedoUI(){
+    private fun setupVideoUI(){
         binding.episodeDescTextView.visibility = View.INVISIBLE
         binding.headerView.visibility = View.INVISIBLE
         val activity = activity as AppCompatActivity
